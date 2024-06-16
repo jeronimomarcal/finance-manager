@@ -13,8 +13,8 @@ $user_id = $_SESSION['user_id'];
 
 // Total de receitas e despesas
 $stmt = $pdo->prepare("SELECT 
-    SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as total_income,
-    SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as total_expense
+    SUM(CASE WHEN type = 'Expense' THEN amount ELSE 0 END) as total_expense,
+    SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) as total_income
     FROM transactions WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $totals = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -27,8 +27,8 @@ $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 // Dados para gráficos
 $stmt = $pdo->prepare("SELECT 
     category, 
-    SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as total_expense,
-    SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as total_income
+    SUM(CASE WHEN type = 'Expense' THEN amount ELSE 0 END) as total_expense,
+    SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) as total_income
     FROM transactions WHERE user_id = ? GROUP BY category");
 $stmt->execute([$user_id]);
 $category_totals = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -43,18 +43,22 @@ foreach ($category_totals as $row) {
 }
 ?>
 
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Gerenciador Financeiro</title>
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="assets/css/header-style.css"> <!-- CSS personalizado -->
 </head>
 <body>
-<?php include 'includes/header.php'; ?>
+
+<?php include 'includes/header.php'; ?> <!-- Incluindo o header.php -->
+
 <div class="container mt-5">
     <!-- Cards de Resumo -->
     <div class="row mb-4">
@@ -79,7 +83,6 @@ foreach ($category_totals as $row) {
     <!-- Botão para Adicionar Transação -->
     <button onclick="window.location.href='transaction.php'" class="btn btn-primary mb-3">Adicionar Transação</button>
 
-    
     <!-- Tabela de Transações -->
     <h3 class="mt-5">Transações</h3>
     <table class="table table-bordered">
@@ -94,27 +97,27 @@ foreach ($category_totals as $row) {
             </tr>
         </thead>
         <tbody>
-    <?php foreach ($transactions as $transaction): ?>
-        <tr>
-            <td>R$ <?= number_format($transaction['amount'], 2) ?></td>
-            <td><?= ucfirst($transaction['type']) ?></td>
-            <td><?= $transaction['category'] ?></td>
-            <td><?= $transaction['date'] ?></td>
-            <td><?= $transaction['description'] ?></td>
-            <td>
-                <form action="api/delete_transaction.php" method="post" style="display: inline;">
-                    <input type="hidden" name="transaction_id" value="<?= $transaction['id'] ?>">
-                    <button type="submit" name="delete_transaction" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir esta transação?')">Excluir</button>
-                </form>
-                <form action="edit_transaction.php" method="get" style="display: inline;">
-                    <input type="hidden" name="id" value="<?= $transaction['id'] ?>">
-                    <button type="submit" class="btn btn-sm btn-primary">Editar</button>
-                </form>
-            </td>
-        </tr>
-    <?php endforeach; ?>
-</tbody>
+        <?php foreach ($transactions as $transaction): ?>
+    <tr>
+        <td>R$ <?= number_format($transaction['amount'], 2) ?></td>
+        <td><?= ($transaction['type'] === 'income') ? 'Ganho' : 'Despesa' ?></td>
+        <td><?= $transaction['category'] ?></td>
+        <td><?= $transaction['date'] ?></td>
+        <td><?= $transaction['description'] ?></td>
+        <td>
+            <form action="api/delete_transaction.php" method="post" style="display: inline;">
+                <input type="hidden" name="transaction_id" value="<?= $transaction['id'] ?>">
+                <button type="submit" name="delete_transaction" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir esta transação?')">Excluir</button>
+            </form>
+            <form action="edit_transaction.php" method="get" style="display: inline;">
+                <input type="hidden" name="id" value="<?= $transaction['id'] ?>">
+                <button type="submit" class="btn btn-sm btn-primary">Editar</button>
+            </form>
+        </td>
+    </tr>
+<?php endforeach; ?>
 
+        </tbody>
     </table>
 
     <!-- Gráficos -->
@@ -142,90 +145,98 @@ foreach ($category_totals as $row) {
         </div>
     </div>
 </div>
-<script src="assets/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="assets/js/script.js"></script> <!-- Seu script JS personalizado -->
 <script>
-    // Dados para os gráficos
-    var categories = <?= json_encode($categories) ?>;
-    var expenses = <?= json_encode($expenses) ?>;
-    var incomes = <?= json_encode($incomes) ?>;
-    var totalExpense = <?= json_encode($totals['total_expense']) ?>;
-    var totalIncome = <?= json_encode($totals['total_income']) ?>;
+    // Aguardar o carregamento completo do DOM antes de executar o código
+    document.addEventListener("DOMContentLoaded", function() {
+        // Dados para os gráficos
+        var categories = <?= json_encode($categories) ?>;
+        var expenses = <?= json_encode($expenses) ?>;
+        var incomes = <?= json_encode($incomes) ?>;
+        var totalExpense = <?= json_encode($totals['total_expense']) ?>;
+        var totalIncome = <?= json_encode($totals['total_income']) ?>;
 
-    // Configuração do gráfico de pizza
-    var ctxPie = document.getElementById('pieChart').getContext('2d');
-    var pieChart = new Chart(ctxPie, {
-        type: 'pie',
-        data: {
-            labels: ['Despesas', 'Ganho'],
-            datasets: [{
-                label: 'Despesas vs Ganho',
-                data: [totalExpense, totalIncome],
-                backgroundColor: ['#dc3545', '#28a745']
-            }]
-        }
-    });
-
-    // Configuração do gráfico de barras
-    var ctxBar = document.getElementById('barChart').getContext('2d');
-    var barChart = new Chart(ctxBar, {
-        type: 'bar',
-        data: {
-            labels: categories,
-            datasets: [{
-                label: 'Despesas',
-                data: expenses,
-                backgroundColor: 'rgba(220, 53, 69, 0.8)',
-                borderColor: 'rgba(220, 53, 69, 1)',
-                borderWidth: 1
-            }, {
-                label: 'Ganho',
-                data: incomes,
-                backgroundColor: 'rgba(40, 167, 69, 0.8)',
-                borderColor: 'rgba(40, 167, 69, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                yAxes: [{
-                    ticks: {
-                        beginAtZero: true
-                    }
+        // Configuração do gráfico de pizza
+        var ctxPie = document.getElementById('pieChart').getContext('2d');
+        var pieChart = new Chart(ctxPie, {
+            type: 'pie',
+            data: {
+                labels: ['Despesas', 'Ganhos'],
+                datasets: [{
+                    label: 'Despesas vs Ganhos',
+                    data: [totalExpense, totalIncome],
+                    backgroundColor: ['#dc3545', '#28a745']
                 }]
             }
-        }
-    });
+        });
 
-    // Configuração do gráfico de linha
-    var ctxLine = document.getElementById('lineChart').getContext('2d');
-    var lineChart = new Chart(ctxLine, {
-        type: 'line',
-        data: {
-            labels: categories,
-            datasets: [{
-                label: 'Despesas',
-                data: expenses,
-                fill: false,
-                borderColor: 'rgba(220, 53, 69, 1)',
-                borderWidth: 1
-            }, {
-                label: 'Ganho',
-                data: incomes,
-                fill: false,
-                borderColor: 'rgba(40, 167, 69, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                yAxes: [{
-                    ticks: {
-                        beginAtZero: true
-                    }
+        // Configuração do gráfico de barras
+        var ctxBar = document.getElementById('barChart').getContext('2d');
+        var barChart = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: categories,
+                datasets: [{
+                    label: 'Despesas',
+                    data: expenses,
+                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Ganhos',
+                    data: incomes,
+                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    borderWidth: 1
                 }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
             }
-        }
+        });
+
+        // Configuração do gráfico de linha
+        var ctxLine = document.getElementById('lineChart').getContext('2d');
+        var lineChart = new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: categories,
+                datasets: [{
+                    label: 'Despesas',
+                    data: expenses,
+                    fill: false,
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Ganhos',
+                    data: incomes,
+                    fill: false,
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
     });
 </script>
+<script src="assets/js/script.js"></script> <!-- Seu script JS personalizado -->
 </body>
 </html>

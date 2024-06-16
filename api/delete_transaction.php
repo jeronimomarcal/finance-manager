@@ -6,6 +6,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id = $_POST['id'];
     $user_id = $_SESSION['user_id'];
 
+    // Preparar e executar a consulta SQL para exclusão
     $stmt = $pdo->prepare("DELETE FROM transactions WHERE id = ? AND user_id = ?");
     $stmt->execute([$id, $user_id]);
 
