@@ -43,7 +43,6 @@ foreach ($category_totals as $row) {
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -53,7 +52,9 @@ foreach ($category_totals as $row) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/header-style.css"> <!-- CSS personalizado -->
+    <link rel="stylesheet" href="assets/css/header-style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="assets/js/DashboardCharts.js"></script>
 </head>
 <body>
 
@@ -93,150 +94,63 @@ foreach ($category_totals as $row) {
                 <th>Categoria</th>
                 <th>Data</th>
                 <th>Descrição</th>
-                <th>Ações</th> <!-- Coluna para botões de ação -->
+                <th>Ações</th> 
             </tr>
         </thead>
         <tbody>
         <?php foreach ($transactions as $transaction): ?>
-    <tr>
-        <td>R$ <?= number_format($transaction['amount'], 2) ?></td>
-        <td><?= ($transaction['type'] === 'income') ? 'Ganho' : 'Despesa' ?></td>
-        <td><?= $transaction['category'] ?></td>
-        <td><?= $transaction['date'] ?></td>
-        <td><?= $transaction['description'] ?></td>
-        <td>
-            <form action="api/delete_transaction.php" method="post" style="display: inline;">
-                <input type="hidden" name="transaction_id" value="<?= $transaction['id'] ?>">
-                <button type="submit" name="delete_transaction" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir esta transação?')">Excluir</button>
-            </form>
-            <form action="edit_transaction.php" method="get" style="display: inline;">
-                <input type="hidden" name="id" value="<?= $transaction['id'] ?>">
-                <button type="submit" class="btn btn-sm btn-primary">Editar</button>
-            </form>
-        </td>
-    </tr>
-<?php endforeach; ?>
-
+            <tr>
+                <td>R$ <?= number_format($transaction['amount'], 2) ?></td>
+                <td><?= ($transaction['type'] === 'income') ? 'Ganho' : 'Despesa' ?></td>
+                <td><?= $transaction['category'] ?></td>
+                <td><?= $transaction['date'] ?></td>
+                <td><?= $transaction['description'] ?></td>
+                <td>
+                    <form action="api/delete_transaction.php" method="post" style="display: inline;">
+                        <input type="hidden" name="transaction_id" value="<?= $transaction['id'] ?>">
+                        <button type="submit" name="delete_transaction" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir esta transação?')">Excluir</button>
+                    </form>
+                    <form action="edit_transaction.php" method="get" style="display: inline;">
+                        <input type="hidden" name="id" value="<?= $transaction['id'] ?>">
+                        <button type="submit" class="btn btn-sm btn-primary">Editar</button>
+                    </form>
+                </td>
+            </tr>
+        <?php endforeach; ?>
         </tbody>
     </table>
 
     <!-- Gráficos -->
-    <h3 class="mt-5">Gráficos</h3>
+    <h3 class="mt-5">Resumo de Gastos por Categoria </h3>
     <div class="row">
-        <!-- Gráfico de Pizza -->
-        <div class="col-md-6">
-            <div class="chart-container">
-                <canvas id="pieChart"></canvas>
-            </div>
+            <!-- Gráfico de Linha -->
+        <div class="container-line-chart">
+        <canvas id="lineChart"></canvas>
+    </div>
+            <!-- Gráfico de Barras -->
+    <div class="container-row">
+        <div class="container-bar-chart">
+            <canvas id="barChart"></canvas>
         </div>
-        <!-- Gráfico de Barras -->
-        <div class="col-md-6">
-            <div class="chart-container">
-                <canvas id="barChart"></canvas>
-            </div>
+                <!-- Gráfico de Pizza -->
+        <div class="container-pie-chart">
+            <canvas id="pieChart"></canvas>
         </div>
     </div>
-    <div class="row mt-5">
-        <!-- Gráfico de Linha -->
-        <div class="col-md-12">
-            <div class="chart-container">
-                <canvas id="lineChart"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
+    
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="assets/js/script.js"></script> <!-- Seu script JS personalizado -->
 <script>
-    // Aguardar o carregamento completo do DOM antes de executar o código
     document.addEventListener("DOMContentLoaded", function() {
-        // Dados para os gráficos
         var categories = <?= json_encode($categories) ?>;
         var expenses = <?= json_encode($expenses) ?>;
         var incomes = <?= json_encode($incomes) ?>;
         var totalExpense = <?= json_encode($totals['total_expense']) ?>;
         var totalIncome = <?= json_encode($totals['total_income']) ?>;
 
-        // Configuração do gráfico de pizza
-        var ctxPie = document.getElementById('pieChart').getContext('2d');
-        var pieChart = new Chart(ctxPie, {
-            type: 'pie',
-            data: {
-                labels: ['Despesas', 'Ganhos'],
-                datasets: [{
-                    label: 'Despesas vs Ganhos',
-                    data: [totalExpense, totalIncome],
-                    backgroundColor: ['#dc3545', '#28a745']
-                }]
-            }
-        });
-
-        // Configuração do gráfico de barras
-        var ctxBar = document.getElementById('barChart').getContext('2d');
-        var barChart = new Chart(ctxBar, {
-            type: 'bar',
-            data: {
-                labels: categories,
-                datasets: [{
-                    label: 'Despesas',
-                    data: expenses,
-                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
-                    borderColor: 'rgba(220, 53, 69, 1)',
-                    borderWidth: 1
-                }, {
-                    label: 'Ganhos',
-                    data: incomes,
-                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
-                    borderColor: 'rgba(40, 167, 69, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            beginAtZero: true
-                        }
-                    }]
-                }
-            }
-        });
-
-        // Configuração do gráfico de linha
-        var ctxLine = document.getElementById('lineChart').getContext('2d');
-        var lineChart = new Chart(ctxLine, {
-            type: 'line',
-            data: {
-                labels: categories,
-                datasets: [{
-                    label: 'Despesas',
-                    data: expenses,
-                    fill: false,
-                    borderColor: 'rgba(220, 53, 69, 1)',
-                    borderWidth: 1
-                }, {
-                    label: 'Ganhos',
-                    data: incomes,
-                    fill: false,
-                    borderColor: 'rgba(40, 167, 69, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            beginAtZero: true
-                        }
-                    }]
-                }
-            }
-        });
+        new DashboardCharts(categories, expenses, incomes, totalExpense, totalIncome);
     });
 </script>
-<script src="assets/js/script.js"></script> <!-- Seu script JS personalizado -->
+<script src="assets/js/script.js"></script> 
 </body>
 </html>

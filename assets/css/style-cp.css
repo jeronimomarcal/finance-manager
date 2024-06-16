@@ -1,0 +1,88 @@
+
+/* Estilos específicos para esta página podem ser colocados aqui ou em um arquivo separado */
+body {
+    font-family: 'Nunito', sans-serif;
+    background-color: #f7f6fb;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #4723d9;
+}
+
+.charts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.chart-container {
+    flex: 1 1 300px;
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.balance {
+    text-align: center;
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.balance h2 {
+    margin-bottom: 10px;
+    font-size: 1.8rem;
+    color: #555;
+}
+
+.balance .item {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px;
+    border-radius: 8px;
+    font-size: 1.4rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.expense {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.income {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.amount {
+    font-size: 2.5rem;
+    color: #333;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+@media screen and (max-width: 768px) {
+    .chart-container {
+        flex-basis: 100%;
+    }
+}

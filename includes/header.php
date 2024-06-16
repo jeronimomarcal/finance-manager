@@ -30,7 +30,7 @@
                 <div class="nav_list">
                     <a href="dashboard.php" class="nav_link active">
                         <i class='bx bx-grid-alt nav_icon'></i>
-                        <span class="nav_name">Dashboard</span>
+                        <span class="nav_name">Movimetações</span>
                     </a>
                     <a href="#" class="nav_link">
                         <i class='bx bx-user nav_icon'></i>
@@ -48,7 +48,7 @@
                         <i class='bx bx-folder nav_icon'></i>
                         <span class="nav_name">Arquivos</span>
                     </a>
-                    <a href="#" class="nav_link">
+                    <a href="estatisticas.php" class="nav_link">
                         <i class='bx bx-bar-chart-alt-2 nav_icon'></i>
                         <span class="nav_name">Estatísticas</span>
                     </a>
